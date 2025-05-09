@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegância em Engenharia Digital - Cristovão Junior</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos globais personalizados adaptados do componente Vue */
+        :root {
+            --color-gold: #D4AF37;
+            --color-gold-light: #F4C244;
+            --color-black: #000000;
+            --color-neutral-900: #171717; /* Tailwind neutral-900 */
+            --color-neutral-800: #262626; /* Tailwind neutral-800 */
+            --color-gray-300: #d1d5db;   /* Tailwind gray-300 */
+            --color-gray-400: #9ca3af;   /* Tailwind gray-400 */
+            --color-gray-500: #6b7280;   /* Tailwind gray-500 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: var(--color-black);
+            color: var(--color-gray-300);
+            overflow-x: hidden; /* Previne rolagem horizontal */
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Cores personalizadas */
+        .text-gold {
+            color: var(--color-gold);
+        }
+
+        .bg-gold {
+            background-color: var(--color-gold);
+        }
+
+        .bg-gold-light {
+            background-color: var(--color-gold-light);
+        }
+
+        .border-gold {
+            border-color: var(--color-gold);
+        }
+        
+        .text-gradient-gold {
+            background-image: linear-gradient(to right, var(--color-gold), var(--color-gold-light), var(--color-gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Estilos dos cartões (benefícios, recursos, preços) */
+        .custom-card {
+            @apply p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col;
+        }
+
+        .custom-card:hover {
+            @apply transform -translate-y-2;
+            border-color: var(--color-gold);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15);
+        }
+        
+        .icon-wrapper {
+            @apply flex items-center justify-center mb-6;
+        }
+
+        /* Classes de animação */
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.8s ease-out forwards;
+        }
+        
+        /* Estilo dos botões */
+        .cta-button {
+            @apply bg-gold text-black px-8 md:px-10 py-3 md:py-4 rounded-lg font-semibold text-lg hover:bg-gold-light transition-all duration-300 transform hover:scale-105;
+            position: relative;
+            overflow: hidden;
+            display: inline-block; 
+            text-align: center;
+        }
+        
+        .cta-button.mt-auto {
+             margin-top: auto;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .cta-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cta-button:hover::after {
+            opacity: 1;
+        }
+
+        /* Estilos do Modal */
+        .modal {
+            display: none; 
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.95); /* Slightly darker overlay for better focus */
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow: hidden; /* Prevent scrollbars on modal itself */
+        }
+        .modal-content {
+            position: relative;
+            width: 90vw; /* Use viewport width for responsiveness */
+            height: 90vh; /* Use viewport height */
+            margin: auto;
+            display: flex; /* For centering the image */
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Crucial for zoom/pan bounds */
+            cursor: grab; /* Indicate draggable */
+        }
+        .modal-image {
+            /* Initial state, will be transformed by JS */
+            max-width: 100%; /* Fit within content area */
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 0.5rem;
+            transition: transform 0.2s ease-out; /* Smooth zoom/pan */
+            transform-origin: center center; /* Zoom from center */
+            display: block; /* Remove extra space below image */
+        }
+        .modal-image.grabbing {
+            cursor: grabbing;
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 1.5rem; /* Increased spacing */
+            right: 1.5rem;
+            color: white;
+            cursor: pointer;
+            background-color: rgba(0,0,0,0.6); /* Slightly more visible */
+            border-radius: 50%;
+            padding: 0.75rem; /* Larger tap target */
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            z-index: 60; /* Ensure it's above the image */
+        }
+        .modal-close-button:hover {
+            background-color: rgba(0,0,0,0.9);
+            transform: scale(1.1);
+        }
+        /* Zoom instruction text */
+        .zoom-instruction {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            z-index: 60;
+            pointer-events: none; /* So it doesn't interfere with image events */
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+
+    <div id="imageModal" class="modal">
+        <div id="modalContent" class="modal-content">
+            <img id="modalImagePreview" src="quartzo.png" alt="Preview do Site Ampliado" class="modal-image" />
+        </div>
+        <div class="zoom-instruction">Use a roda do mouse para zoom. Clique e arraste para mover.</div>
+        <button id="closeModalButton" class="modal-close-button" aria-label="Fechar modal">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <section class="hero-section relative min-h-screen flex items-center py-10 md:py-20">
+        <div class="absolute inset-0 bg-gradient-to-b from-black via-black to-neutral-900"></div>
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+                <div class="text-content slide-in text-center md:text-left">
+                    <h1 class="font-playfair text-4xl sm:text-5xl md:text-6xl font-bold mb-6 md:mb-8 text-gradient-gold">
+                        Elegência em Engenharia Digital
+                    </h1>
+                    <p class="text-lg sm:text-xl text-gray-300 mb-8 font-inter leading-relaxed">
+                        Uma presença online sofisticada que reflete a excelência e precisão do seu trabalho em engenharia civil.
+                    </p>
+                     <a href="#pricing" class="cta-button text-xl px-12 py-5">Conheça Nossos Planos</a>
+                </div>
+                <div class="preview-image-container">
+                    <div id="openModalTrigger" class="relative overflow-hidden rounded-lg shadow-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 group">
+                        <img src="quartzo-preview.png" alt="Preview do Site de Engenharia" class="w-full rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/600x400/262626/FFFFFF?text=Imagem+Indispon%C3%ADvel';" />
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300 flex items-center justify-center rounded-lg">
+                            <span class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-base font-semibold p-3 bg-black bg-opacity-60 rounded-md">
+                                Clique para ampliar
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 md:py-20 bg-neutral-900">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="font-playfair text-3xl sm:text-4xl font-bold text-center mb-12 md:mb-16 text-gradient-gold">
+                Por que esta Landing Page é Excepcional?
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 slide-in">
+                <div class="custom-card text-center p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col">
+                    <div class="icon-wrapper">
+                        <svg class="w-12 h-12 md:w-14 md:h-14 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="font-playfair text-xl sm:text-2xl font-semibold mb-4 text-gradient-gold">Design Sofisticado</h3>
+                    <p class="text-gray-300 leading-relaxed text-sm sm:text-base">Layout premium que transmite autoridade e expertise técnica, construído para impressionar.</p>
+                </div>
+                <div class="custom-card text-center p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col">
+                    <div class="icon-wrapper">
+                        <svg class="w-12 h-12 md:w-14 md:h-14 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="font-playfair text-xl sm:text-2xl font-semibold mb-4 text-gradient-gold">Conversão Elite</h3>
+                    <p class="text-gray-300 leading-relaxed text-sm sm:text-base">Arquitetura de informação planejada para engajar e converter visitantes em clientes de alto valor.</p>
+                </div>
+                <div class="custom-card text-center p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col">
+                    <div class="icon-wrapper">
+                        <svg class="w-12 h-12 md:w-14 md:h-14 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    </div>
+                    <h3 class="font-playfair text-xl sm:text-2xl font-semibold mb-4 text-gradient-gold">ROI Excepcional</h3>
+                    <p class="text-gray-300 leading-relaxed text-sm sm:text-base">Investimento inteligente com retorno garantido através da captação de projetos premium e qualificados.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 md:py-20 bg-black">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="font-playfair text-3xl sm:text-4xl font-bold text-center mb-12 md:mb-16 text-gradient-gold">
+                Recursos Premium Integrados
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                <div class="custom-card p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col">
+                    <h3 class="font-playfair text-xl sm:text-2xl font-semibold mb-6 text-gradient-gold">Interface Exclusiva e Intuitiva</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start text-gray-300 text-sm sm:text-base">
+                            <svg class="w-5 h-5 text-gold mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Navegação fluida e intuitiva, projetada para a melhor experiência do usuário.
+                        </li>
+                        <li class="flex items-start text-gray-300 text-sm sm:text-base">
+                            <svg class="w-5 h-5 text-gold mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Galeria de projetos visualmente impactante para destacar seus melhores trabalhos.
+                        </li>
+                        <li class="flex items-start text-gray-300 text-sm sm:text-base">
+                            <svg class="w-5 h-5 text-gold mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Formulário de contato otimizado para facilitar a comunicação e geração de leads.
+                        </li>
+                    </ul>
+                </div>
+                <div class="custom-card p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col">
+                    <h3 class="font-playfair text-xl sm:text-2xl font-semibold mb-6 text-gradient-gold">Tecnologia de Ponta e Performance</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start text-gray-300 text-sm sm:text-base">
+                            <svg class="w-5 h-5 text-gold mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Otimização SEO avançada para máxima visibilidade nos motores de busca.
+                        </li>
+                        <li class="flex items-start text-gray-300 text-sm sm:text-base">
+                            <svg class="w-5 h-5 text-gold mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Design totalmente responsivo, garantindo uma visualização perfeita em todos os dispositivos.
+                        </li>
+                        <li class="flex items-start text-gray-300 text-sm sm:text-base">
+                            <svg class="w-5 h-5 text-gold mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Carregamento rápido e performance excepcional para não perder nenhum visitante.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="py-16 md:py-20 bg-neutral-900">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="font-playfair text-3xl sm:text-4xl font-bold text-center mb-12 md:mb-16 text-gradient-gold">
+                Planos de Suporte Anual e Manutenção
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch"> 
+                <div class="custom-card p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col items-center text-center">
+                    <h3 class="font-playfair text-2xl sm:text-3xl font-semibold mb-2 text-gradient-gold">Básico</h3>
+                    <p class="text-gray-400 mb-4 text-sm">Ideal para iniciar com segurança</p>
+                    <div class="my-4">
+                        <span class="text-4xl sm:text-5xl font-bold text-gold">R$209</span>
+                        <span class="text-xl text-gray-400 align-baseline">/mês</span> 
+                    </div>
+                    <p class="text-gray-400 text-xs sm:text-sm mb-6">(Equivalente mensal. Pagamento único anual de R$2499)</p>
+                    <ul class="space-y-3 text-gray-300 mb-8 text-sm sm:text-base text-left w-full px-4 sm:px-0">
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Suporte Técnico Essencial</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Atualizações de Segurança</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Monitoramento Básico</li>
+                    </ul>
+                     </div>
+
+                <div class="custom-card p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col items-center text-center border-2 border-gold shadow-2xl relative transform md:scale-105"> 
+                    <span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gold text-black px-4 py-1 text-xs font-semibold rounded-full shadow-md">MAIS POPULAR</span>
+                    <h3 class="font-playfair text-2xl sm:text-3xl font-semibold mt-6 mb-2 text-gradient-gold">Premium</h3>
+                    <p class="text-gray-400 mb-4 text-sm">Para crescimento e performance</p>
+                    <div class="my-4">
+                        <span class="text-4xl sm:text-5xl font-bold text-gold">R$250</span>
+                        <span class="text-xl text-gray-400 align-baseline">/mês</span>
+                    </div>
+                    <p class="text-gray-400 text-xs sm:text-sm mb-6">(Equivalente mensal. Pagamento único anual de R$2999)</p>
+                     <ul class="space-y-3 text-gray-300 mb-8 text-sm sm:text-base text-left w-full px-4 sm:px-0">
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Suporte Prioritário Avançado</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Consultoria Estratégica Trimestral</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Otimizações de Performance Contínuas</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Relatórios Mensais Detalhados</li>
+                    </ul>
+                     </div>
+
+                <div class="custom-card p-8 rounded-lg bg-neutral-900 border border-neutral-800 transition-all duration-300 flex flex-col items-center text-center">
+                    <h3 class="font-playfair text-2xl sm:text-3xl font-semibold mb-2 text-gradient-gold">Pro</h3>
+                    <p class="text-gray-400 mb-4 text-sm">Solução completa e personalizada</p>
+                    <div class="my-4">
+                        <span class="text-4xl sm:text-5xl font-bold text-gold">R$375</span>
+                        <span class="text-xl text-gray-400 align-baseline">/mês</span>
+                    </div>
+                    <p class="text-gray-400 text-xs sm:text-sm mb-6">(Equivalente mensal. Pagamento único anual de R$4999)</p>
+                    <ul class="space-y-3 text-gray-300 mb-8 text-sm sm:text-base text-left w-full px-4 sm:px-0">
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Suporte VIP Dedicado 24/7</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Desenvolvimento Personalizado (horas inclusas)</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Relatórios Avançados e Análise Preditiva</li>
+                        <li class="flex items-start"><svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Gestor de Contas Dedicado</li>
+                    </ul>
+                     </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 md:py-20 bg-gradient-to-b from-neutral-900 to-black">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="font-playfair text-3xl sm:text-4xl font-bold mb-6 md:mb-8 text-gradient-gold">
+                Eleve seu Negócio ao Próximo Nível Digital
+            </h2>
+            <p class="text-lg sm:text-xl mb-8 md:mb-12 max-w-3xl mx-auto text-gray-300 leading-relaxed">
+                Sua expertise em engenharia merece uma presença digital à altura. Invista em uma landing page que converte e impressiona. Vamos construir juntos o seu sucesso online.
+            </p>
+            <button class="cta-button text-xl px-12 py-5">
+                Iniciar Projeto Agora
+            </button>
+        </div>
+    </section>
+
+    <footer class="py-10 bg-black text-center border-t border-neutral-800">
+        <p class="text-gray-400 text-sm">&copy; <span id="currentYear"></span> Cristovão Junior. Todos os direitos reservados.</p>
+        <p class="text-gray-500 text-xs mt-2">Desenvolvido com paixão por Elegância Digital.</p>
+    </footer>
+
+    <script>
+        // JavaScript para o Modal e Zoom da Imagem
+        const imageModal = document.getElementById('imageModal');
+        const modalContent = document.getElementById('modalContent'); // Container da imagem para zoom
+        const modalImagePreview = document.getElementById('modalImagePreview');
+        const openModalTrigger = document.getElementById('openModalTrigger');
+        const closeModalButton = document.getElementById('closeModalButton');
+        const modalFullImageSrc = "quartzo.png"; 
+
+        let currentScale = 1;
+        let currentTranslateX = 0;
+        let currentTranslateY = 0;
+        let isDragging = false;
+        let startX, startY, initialTranslateX, initialTranslateY;
+
+        const minScale = 0.5; // Minimum zoom out
+        const maxScale = 4;   // Maximum zoom in
+        const scaleStep = 0.1; // Zoom sensitivity
+
+        function applyTransform() {
+            modalImagePreview.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px) scale(${currentScale})`;
+        }
+
+        function resetZoomPan() {
+            currentScale = 1;
+            currentTranslateX = 0;
+            currentTranslateY = 0;
+            applyTransform();
+        }
+        
+        // Função para abrir o modal
+        function openImageModal() {
+            if (imageModal && modalImagePreview) {
+                modalImagePreview.src = modalFullImageSrc; 
+                resetZoomPan(); // Reset zoom/pan state when opening
+                imageModal.style.display = 'flex'; 
+                document.body.style.overflow = 'hidden'; 
+            }
+        }
+
+        // Função para fechar o modal
+        function closeImageModal() {
+            if (imageModal) {
+                imageModal.style.display = 'none'; 
+                document.body.style.overflow = 'auto'; 
+            }
+        }
+
+        // Event listeners para abrir/fechar modal
+        if (openModalTrigger) {
+            openModalTrigger.addEventListener('click', openImageModal);
+        }
+        if (closeModalButton) {
+            closeModalButton.addEventListener('click', closeImageModal);
+        }
+        if (imageModal) {
+            imageModal.addEventListener('click', function(event) {
+                if (event.target === imageModal) { 
+                    closeImageModal();
+                }
+            });
+        }
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && imageModal.style.display === 'flex') {
+                closeImageModal();
+            }
+        });
+
+        // Zoom com a roda do mouse
+        modalContent.addEventListener('wheel', function(event) {
+            event.preventDefault(); // Prevent page scroll
+
+            const rect = modalContent.getBoundingClientRect();
+            // Mouse position relative to the modalContent
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            // Calculate new scale
+            let newScale = currentScale;
+            if (event.deltaY < 0) { // Zoom in
+                newScale = Math.min(maxScale, currentScale + scaleStep);
+            } else { // Zoom out
+                newScale = Math.max(minScale, currentScale - scaleStep);
+            }
+
+            // If scale hasn't changed, do nothing
+            if (newScale === currentScale) return;
+
+            // Calculate translation adjustment to zoom towards mouse pointer
+            // (ImageX - mouseX) / oldScale * newScale = newImageX - mouseX
+            // newImageX = (ImageX - mouseX) / oldScale * newScale + mouseX
+            // newTranslateX = (currentTranslateX - mouseX) / currentScale * newScale + mouseX;
+            // newTranslateY = (currentTranslateY - mouseY) / currentScale * newScale + mouseY;
+            
+            // Simpler approach: Adjust translation based on scale change
+            // This ensures the point under the mouse stays relatively fixed
+            currentTranslateX = mouseX - (mouseX - currentTranslateX) * (newScale / currentScale);
+            currentTranslateY = mouseY - (mouseY - currentTranslateY) * (newScale / currentScale);
+            
+            currentScale = newScale;
+            applyTransform();
+        });
+
+        // Pan (arrastar) a imagem
+        modalImagePreview.addEventListener('mousedown', function(event) {
+            event.preventDefault(); // Prevent image drag-and-drop behavior
+            isDragging = true;
+            modalImagePreview.classList.add('grabbing');
+            startX = event.clientX;
+            startY = event.clientY;
+            initialTranslateX = currentTranslateX;
+            initialTranslateY = currentTranslateY;
+        });
+
+        document.addEventListener('mousemove', function(event) {
+            if (!isDragging) return;
+            event.preventDefault();
+            
+            const dx = event.clientX - startX;
+            const dy = event.clientY - startY;
+            
+            currentTranslateX = initialTranslateX + dx;
+            currentTranslateY = initialTranslateY + dy;
+            
+            applyTransform();
+        });
+
+        document.addEventListener('mouseup', function(event) {
+            if (isDragging) {
+                isDragging = false;
+                modalImagePreview.classList.remove('grabbing');
+            }
+        });
+         // Prevent mouseup outside window from keeping dragging state
+        document.addEventListener('mouseleave', function(event) {
+            if (isDragging) {
+                isDragging = false;
+                modalImagePreview.classList.remove('grabbing');
+            }
+        });
+
+
+        // Define o ano atual no rodapé
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>
